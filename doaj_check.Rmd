@@ -1,0 +1,89 @@
+---
+title: "DOAJ Reverse Check"
+output:
+  word_document: default
+  html_notebook: default
+---
+
+### Indicators for reverse flipping
+
+```
+Journal is no longer Open Access
+Journal is no longer open access
+No longer open access
+No OA or licence info
+Journal is not open access
+No OA statement
+Journal is not Open Access
+no OA statement no licence
+BMC stopped publishing
+journal not open access
+Journal not open access
+Missing OA statement
+no OA statement
+no OA and licence
+no licence no OA statement
+no licence, no OA statement
+No license nor OA statement
+No license nor Open Access statement
+No longer OA
+No OA statement or licence
+not open access
+not Open Access
+Removed at publisher's request
+```
+
+### Results of manual validation
+
+```{r}
+library(tidyverse)
+my_df <- readxl::read_xlsx("data/subset_doaj.xlsx")
+# check for duplicate titles
+my_df %>%
+  group_by(`Journal Title`) %>%
+  filter(n() > 1)
+my_df <- my_df %>%
+  distinct(`Journal Title`, .keep_all = TRUE)
+# number of istinct journals
+nrow(my_df)
+# by category
+count(my_df, category, sort = TRUE)
+```
+
+Fetching publisher info from Crossref
+
+```{r}
+library(rcrossref)
+tt <- purrr::map(my_df$ISSN, .f = purrr::safely(function(x) {
+  tt <- rcrossref::cr_works(
+    filter = c(
+      issn = x
+    ),
+    facet = TRUE,
+    # less api traffic
+    select = "DOI"
+  )
+  if (!is.null(tt)) {
+    tibble::tibble(
+      issn = x,
+      year_published = list(tt$facets$published),
+      license_refs = list(tt$facets$license),
+      journal_title = tt$facets$`container-title`$.id[1],
+      publisher = tt$facets$publisher$.id[1]
+    )
+  } else {
+    NULL
+  }
+}))
+my_cr <- purrr::map_df(tt, "result")
+# glimpse crossref metadata
+my_cr
+```
+
+```{r}
+# join with DOAJ set and calcualte number of journals by publisher and oa model
+my_cr %>%
+  right_join(my_df, by = c("issn" = "ISSN")) %>%
+  group_by(publisher, category) %>%
+  count(sort = TRUE)
+```
