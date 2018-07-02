@@ -9,7 +9,7 @@ knitr::opts_chunk$set(
   fig.height = 6)
 #
 library(tidyverse)
-#' load lisay file
+#' load lisa's file
 my_df <- readxl::read_xlsx("data/elsevier_13-18.xlsx", col_types = "text")
 #' number of files
 my_df %>%
@@ -36,4 +36,10 @@ my_df %>%
   ggplot(aes(File, freq, fill = `OA Model`)) + 
   geom_bar(stat = "identity") +
   scale_y_continuous(labels = scales::percent) 
-
+#' table view
+my_df %>%
+  filter(!File == "Elsevier OA List 2013") %>% 
+  filter(!`OA Model` == "OA Model") %>%
+  group_by(File, `OA Model`) %>%
+  summarise (n = n()) %>%
+  mutate(freq = n / sum(n))

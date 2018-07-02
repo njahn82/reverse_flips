@@ -1,7 +1,7 @@
 
 
 
-load lisay file
+load lisa's file
 
 
 ```r
@@ -174,4 +174,28 @@ my_df %>%
 ```
 
 ![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5-1.png)
+
+table view
+
+
+```r
+my_df %>%
+  filter(!File == "Elsevier OA List 2013") %>% 
+  filter(!`OA Model` == "OA Model") %>%
+  group_by(File, `OA Model`) %>%
+  summarise (n = n()) %>%
+  mutate(freq = n / sum(n))
+#> # A tibble: 8 x 4
+#> # Groups:   File [4]
+#>   File                        `OA Model`      n  freq
+#>   <chr>                       <chr>       <int> <dbl>
+#> 1 Elsevier OA Price List 2015 Hybrid       1727 0.863
+#> 2 Elsevier OA Price List 2015 Open Access   274 0.137
+#> 3 Elsevier OA Price List 2016 Hybrid       2146 0.811
+#> 4 Elsevier OA Price List 2016 Open Access   499 0.189
+#> 5 Elsevier OA Price List 2017 Hybrid       2102 0.825
+#> 6 Elsevier OA Price List 2017 Open Access   445 0.175
+#> 7 Elsevier OA Price List 2018 Hybrid       2016 0.855
+#> 8 Elsevier OA Price List 2018 Open Access   341 0.145
+```
 
