@@ -34,3 +34,9 @@ apc_current %>%
 apc_current %>% 
   filter(`Journal Title` %in% flipped_jns$`Journal Title`) %>%
   write_csv("data/elsevier_flipped.csv")
+#' get reverse flips
+apc <- readr::read_csv("data/elsevier_07_18_flipped.csv")
+apc %>%
+  group_by(issn) %>%
+  slice(which.max(year)) %>%
+  filter(oa_model == "Hybrid")
