@@ -54,7 +54,19 @@ my_df %>%
   group_by(issn) %>%
   slice(which.max(year)) %>%
   filter(year == 2018) %>%
-  filter(oa_model == "Hybrid") %>%
+  filter(oa_model == "Hybrid") -> rev_flipped
+#' includde year of flip
+my_df %>%
+  filter(issn %in% rev_flipped$issn) %>%
+  filter(oa_model == "Open Access") %>%
+  group_by(issn) %>% 
+  slice(which.max(year)) %>%
+  mutate(year_flipped = as.integer(year) + 1) %>%
+  select(issn, year_flipped) %>%
+  right_join(rev_flipped, by = "issn") %>%
+  arrange(desc(year_flipped), journal_name) -> rev_flipped
+write_csv(rev_flipped, "data/elsevier_07_18_rev_flipped.csv")
+rev_flipped %>%
   knitr::kable()
 #' ### Show OA flips
 my_df %>%
@@ -93,3 +105,11 @@ my_df %>%
     scale_fill_manual("OA Model", values = c("#009392", "#d0587e")) +
     theme_minimal()
   ggsave("elsevier_07_18_discontinued.pdf", width = 6, height = 6 * 0.618, dpi = "retina")
+#' backup data of discontinued Elsevier data
+  my_df %>%
+    arrange(journal_name, year) %>%
+    group_by(issn) %>%
+    slice(which.max(year)) %>%
+    filter(year < 2018) %>%
+    slice(which.max(year)) %>%
+    write_csv("elsevier_discontinued_jns.csv")

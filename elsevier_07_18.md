@@ -86,27 +86,44 @@ my_df %>%
   group_by(issn) %>%
   slice(which.max(year)) %>%
   filter(year == 2018) %>%
-  filter(oa_model == "Hybrid") %>%
+  filter(oa_model == "Hybrid") -> rev_flipped
+```
+
+includde year of flip
+
+
+```r
+my_df %>%
+  filter(issn %in% rev_flipped$issn) %>%
+  filter(oa_model == "Open Access") %>%
+  group_by(issn) %>% 
+  slice(which.max(year)) %>%
+  mutate(year_flipped = as.integer(year) + 1) %>%
+  select(issn, year_flipped) %>%
+  right_join(rev_flipped, by = "issn") %>%
+  arrange(desc(year_flipped), journal_name) -> rev_flipped
+write_csv(rev_flipped, "data/elsevier_07_18_rev_flipped.csv")
+rev_flipped %>%
   knitr::kable()
 ```
 
 
 
-|issn      |journal_name                                            |oa_model |apc  |file                        |year |
-|:---------|:-------------------------------------------------------|:--------|:----|:---------------------------|:----|
-|1369-7021 |Materials Today                                         |Hybrid   |3300 |Elsevier OA Price List 2018 |2018 |
-|1876-6102 |Energy Procedia                                         |Hybrid   |0    |Elsevier OA Price List 2018 |2018 |
-|1878-450X |International Journal of Gastronomy and Food Science    |Hybrid   |3000 |Elsevier OA Price List 2018 |2018 |
-|2212-6864 |Physics of the Dark Universe                            |Hybrid   |2000 |Elsevier OA Price List 2018 |2018 |
-|2213-5383 |Journal of Cancer Policy                                |Hybrid   |1600 |Elsevier OA Price List 2018 |2018 |
-|2214-1677 |JCRS Online Case Reports                                |Hybrid   |3000 |Elsevier OA Price List 2018 |2018 |
-|2214-5400 |Meta Gene                                               |Hybrid   |1500 |Elsevier OA Price List 2018 |2018 |
-|2214-9937 |Sustainable Materials and Technologies                  |Hybrid   |1100 |Elsevier OA Price List 2018 |2018 |
-|2214-9996 |Annals of Global Health                                 |Hybrid   |1200 |Elsevier OA Price List 2018 |2018 |
-|2215-0382 |Colloid and Interface Science Communications            |Hybrid   |1500 |Elsevier OA Price List 2018 |2018 |
-|2215-1532 |Environmental Nanotechnology, Monitoring and Management |Hybrid   |1950 |Elsevier OA Price List 2018 |2018 |
-|2352-2143 |Computational Condensed Matter                          |Hybrid   |1000 |Elsevier OA Price List 2018 |2018 |
-|2352-4073 |Plant Gene                                              |Hybrid   |1500 |Elsevier OA Price List 2018 |2018 |
+|issn      | year_flipped|journal_name                                            |oa_model |apc  |file                        |year |
+|:---------|------------:|:-------------------------------------------------------|:--------|:----|:---------------------------|:----|
+|1876-6102 |         2018|Energy Procedia                                         |Hybrid   |0    |Elsevier OA Price List 2018 |2018 |
+|2214-9996 |         2017|Annals of Global Health                                 |Hybrid   |1200 |Elsevier OA Price List 2018 |2018 |
+|2352-2143 |         2017|Computational Condensed Matter                          |Hybrid   |1000 |Elsevier OA Price List 2018 |2018 |
+|1878-450X |         2017|International Journal of Gastronomy and Food Science    |Hybrid   |3000 |Elsevier OA Price List 2018 |2018 |
+|1369-7021 |         2017|Materials Today                                         |Hybrid   |3300 |Elsevier OA Price List 2018 |2018 |
+|2215-0382 |         2016|Colloid and Interface Science Communications            |Hybrid   |1500 |Elsevier OA Price List 2018 |2018 |
+|2215-1532 |         2016|Environmental Nanotechnology, Monitoring and Management |Hybrid   |1950 |Elsevier OA Price List 2018 |2018 |
+|2213-5383 |         2016|Journal of Cancer Policy                                |Hybrid   |1600 |Elsevier OA Price List 2018 |2018 |
+|2214-5400 |         2016|Meta Gene                                               |Hybrid   |1500 |Elsevier OA Price List 2018 |2018 |
+|2212-6864 |         2016|Physics of the Dark Universe                            |Hybrid   |2000 |Elsevier OA Price List 2018 |2018 |
+|2352-4073 |         2016|Plant Gene                                              |Hybrid   |1500 |Elsevier OA Price List 2018 |2018 |
+|2214-9937 |         2016|Sustainable Materials and Technologies                  |Hybrid   |1100 |Elsevier OA Price List 2018 |2018 |
+|2214-1677 |         2015|JCRS Online Case Reports                                |Hybrid   |3000 |Elsevier OA Price List 2018 |2018 |
 
 ### Show OA flips
 
@@ -169,7 +186,7 @@ my_df %>%
   theme_minimal()
 ```
 
-<img src="figure/unnamed-chunk-9-1.png" title="plot of chunk unnamed-chunk-9" alt="plot of chunk unnamed-chunk-9" width="70%" style="display: block; margin: auto;" />
+<img src="figure/unnamed-chunk-10-1.png" title="plot of chunk unnamed-chunk-10" alt="plot of chunk unnamed-chunk-10" width="70%" style="display: block; margin: auto;" />
 
 ```r
   ggsave("elsevier_07_18.pdf", width = 6, height = 6 * 0.618, dpi = "retina")
@@ -195,9 +212,22 @@ Discontinued journals by open access business models
     theme_minimal()
 ```
 
-<img src="figure/unnamed-chunk-10-1.png" title="plot of chunk unnamed-chunk-10" alt="plot of chunk unnamed-chunk-10" width="70%" style="display: block; margin: auto;" />
+<img src="figure/unnamed-chunk-11-1.png" title="plot of chunk unnamed-chunk-11" alt="plot of chunk unnamed-chunk-11" width="70%" style="display: block; margin: auto;" />
 
 ```r
   ggsave("elsevier_07_18_discontinued.pdf", width = 6, height = 6 * 0.618, dpi = "retina")
+```
+
+backup data of discontinued Elsevier data
+
+
+```r
+  my_df %>%
+    arrange(journal_name, year) %>%
+    group_by(issn) %>%
+    slice(which.max(year)) %>%
+    filter(year < 2018) %>%
+    slice(which.max(year)) %>%
+    write_csv("elsevier_discontinued_jns.csv")
 ```
 
