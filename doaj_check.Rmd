@@ -87,3 +87,23 @@ my_cr %>%
   group_by(publisher, category) %>%
   count(sort = TRUE)
 ```
+
+```{r}
+# data backup
+my_cr %>%
+  right_join(my_df, by = c("issn" = "ISSN")) %>%
+  select(issn, publisher, 6:10) %>%
+  filter(!is.na(category)) %>%
+  filter(!category %in% c("Fully OA", "Discontinued")) -> doaj_rev
+
+write_csv(doaj_rev, "data/doaj_reverse_flips.csv")
+```
+
+```{r}
+doaj_rev %>%
+  select(issn, year_flipped =  `Date Removed (dd/mm/yyyy)`, journal_name = `Journal Title`, publisher, oa_model = category) %>%
+  mutate(evidence = "DOAJ check") %>%
+  mutate(year_flipped = lubridate::parse_date_time(year_flipped, c('y', 'ymd', 'ym'))) %>%
+  mutate(year_flipped = lubridate::year(year_flipped)) -> doaj_cleaned
+rio::export(doaj_cleaned, "data/doaj_cleaned.xlsx")
+```
